@@ -1,0 +1,9 @@
+[submodule "extlibs/Simple-Lexer"]
+	path = extlibs/Simple-Lexer
+	url = https://github.com/Cybegon/Simple-Lexer
+[submodule "extlibs/DVM"]
+	path = extlibs/DVM
+	url = https://github.com/Cybegon/DVM
+[submodule "extlibs/datatypes.h"]
+	path = extlibs/datatypes.h
+	url = https://github.com/Cybegon/datatypes.h
