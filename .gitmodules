@@ -7,3 +7,6 @@
 [submodule "extlibs/datatypes.h"]
 	path = extlibs/datatypes.h
 	url = https://github.com/Cybegon/datatypes.h
+[submodule "extlibs/minizip-ng"]
+	path = extlibs/minizip-ng
+	url = https://github.com/zlib-ng/minizip-ng.git
