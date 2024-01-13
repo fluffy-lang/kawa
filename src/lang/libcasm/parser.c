@@ -2,36 +2,35 @@
 
 void kStage0(KCompiler* compiler, car_opcodeStruct* carOpcodeStruct)
 {
-    switch (compiler->currentToken.type) {
+    switch (kcGetCurrentToken(compiler)->type) {
         case T_DIRECTIVE: {
-            if ( strcmp(compiler->currentToken.identString, "section") == 0 ) {
+            if ( strcmp(kcGetCurrentToken(compiler)->identString, "section") == 0 ) {
 
             }
-//            compiler->state = STAGE2;
             break;
         }
         case T_KEYWORD: {
-            carOpcodeStruct->opcode = compiler->currentToken.tokenInfo & 0xFF;
-            compiler->subState = KWD_STAGE1_1;
+            carOpcodeStruct->opcode = kcGetCurrentToken(compiler)->tokenInfo & 0xFF;
+            kcSetSubState( compiler, KWD_STAGE1_1 );
             break;
         }
         case T_LABEL: {
-            duint nameLen = strlen( compiler->currentToken.identString );
+            duint nameLen = strlen( kcGetCurrentToken(compiler)->identString );
 
             KLabel* label   = SL_MALLOC( sizeof(KLabel) );
             label->name     = SL_MALLOC( nameLen + 1 );
-            label->address  = (ADDRESS)compiler->currentModule->position;
+            label->address  = (ADDRESS)kcGetModule( compiler, kcGetCurrentModuleName(compiler) )->position;
 
-            strcpy(label->name, compiler->currentToken.identString);
+            strcpy(label->name, kcGetCurrentToken(compiler)->identString);
 
-            mNewLabel(compiler->currentModule, label);
+            mNewLabel(compiler, label);
             break;
         }
         case T_ENDL: {
             break;
         }
         case T_EOF: {
-            compiler->state = KCS_RELEASE;
+            kcSetState(compiler, KCS_RELEASE);
             return;
         }
         default: {
@@ -40,24 +39,24 @@ void kStage0(KCompiler* compiler, car_opcodeStruct* carOpcodeStruct)
             break;
         }
     }
-    compiler->state |= KCS_NEXT_TOKEN;
+    kcSetState(compiler, kcGetState(compiler) | KCS_NEXT_TOKEN);
 }
 
 void kStage1_1(KCompiler* compiler, car_opcodeStruct* carOpcodeStruct)
 {
-    switch (compiler->currentToken.type) {
+    switch (kcGetCurrentToken(compiler)->type) {
         case '{': {
-            compiler->subState = KWD_STAGE1_2;
+            kcSetSubState(compiler, KWD_STAGE1_2);
             break;
         }
         case T_CONSTANT:
         case T_REGISTER: {
-            compiler->subState = KWD_STAGE1_4;
+            kcSetSubState(compiler, KWD_STAGE1_4);
             return;
         }
         case T_ENDL: {
-            compiler->state    |= KCS_GENERATE;
-            compiler->subState  = STAGE0;
+            kcSetState(compiler, kcGetState(compiler) | KCS_GENERATE);
+            kcSetSubState(compiler, STAGE0);
             break;
         }
         default: {
@@ -66,27 +65,27 @@ void kStage1_1(KCompiler* compiler, car_opcodeStruct* carOpcodeStruct)
             break;
         }
     }
-    compiler->state |= KCS_NEXT_TOKEN;
+    kcSetState(compiler, kcGetState(compiler) | KCS_NEXT_TOKEN);
 }
 
 void kStage1_4(KCompiler* compiler, car_opcodeStruct* carOpcodeStruct)
 {
-    switch (compiler->currentToken.type) {
+    switch (kcGetCurrentToken(compiler)->type) {
         case T_REGISTER: {
             if (carOpcodeStruct->regDst == NO_REG)
-                carOpcodeStruct->regDst = compiler->currentToken.tokenInfo;
+                carOpcodeStruct->regDst = kcGetCurrentToken(compiler)->tokenInfo;
             else
-                carOpcodeStruct->regList |= (1u << compiler->currentToken.tokenInfo);
-            compiler->subState = KWD_STAGE2;
+                carOpcodeStruct->regList |= (1u << kcGetCurrentToken(compiler)->tokenInfo);
+            kcSetSubState(compiler, KWD_STAGE2);
             break;
         }
         case T_CONSTANT: {
-            carOpcodeStruct->immediate = (duint64)compiler->currentToken.value;
+            carOpcodeStruct->immediate = (duint64)kcGetCurrentToken(compiler)->value;
             break;
         }
         case T_ENDL: {
-            compiler->state    |= KCS_GENERATE;
-            compiler->subState  = STAGE0;
+            kcSetState(compiler, kcGetState(compiler) | KCS_GENERATE);
+            kcSetSubState(compiler, STAGE0);
             break;
         }
         default: {
@@ -95,19 +94,19 @@ void kStage1_4(KCompiler* compiler, car_opcodeStruct* carOpcodeStruct)
             break;
         }
     }
-    compiler->state |= KCS_NEXT_TOKEN;
+    kcSetState(compiler, kcGetState(compiler) | KCS_NEXT_TOKEN);
 }
 
 void kStage2(KCompiler* compiler, car_opcodeStruct* carOpcodeStruct)
 {
-    switch (compiler->currentToken.type) {
+    switch (kcGetCurrentToken(compiler)->type) {
         case ',': {
-            compiler->subState = KWD_STAGE1_1;
+            kcSetSubState(compiler, KWD_STAGE1_1);
             break;
         }
         case T_ENDL: {
-            compiler->state    |= KCS_GENERATE;
-            compiler->subState  = STAGE0;
+            kcSetState(compiler, kcGetState(compiler) | KCS_GENERATE);
+            kcSetSubState(compiler, STAGE0);
             break;
         }
         default: {
@@ -116,6 +115,6 @@ void kStage2(KCompiler* compiler, car_opcodeStruct* carOpcodeStruct)
             break;
         }
     }
-    compiler->state |= KCS_NEXT_TOKEN;
+    kcSetState(compiler, kcGetState(compiler) | KCS_NEXT_TOKEN);
 }
 

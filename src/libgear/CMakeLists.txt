@@ -10,13 +10,14 @@ target_link_libraries(libgear
             libgeff
         PRIVATE
             libcar-gen
+            MINIZIP::minizip
 )
 
 target_include_directories(libgear PUBLIC
         $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src/public/libgear>
         $<INSTALL_INTERFACE:include>
 )
-message(${PROJECT_SOURCE_DIR}/src/public/libgear)
+
 install(TARGETS libgear
         EXPORT ${CMAKE_PROJECT_NAME}Targets
         RUNTIME DESTINATION bin

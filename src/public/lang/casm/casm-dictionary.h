@@ -5,9 +5,8 @@
 #include "slrules.h"
 
 #define CAR_FORMAT_I
+#define CAR_FORMAT_R
 #include "opcodes.h"
-
-#include "formats.h"
 
 //#define (o, ff) ( ( ff << 8 ) | o )
 

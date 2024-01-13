@@ -14,7 +14,7 @@ typedef struct KModule KModule;
 
 typedef enum KCompilerState KCompilerState;
 
-typedef void (*KWriter)(KModule* kModule);
+//typedef void (*KWriter)(KModule* kModule);
 
 struct KLabel
 {
@@ -25,13 +25,13 @@ struct KLabel
 struct KModule
 {
     struct GEFF_SECTION section;
-    KHashMap*           labelList;
     MEMORY              data;
     dsize               position;
     duint64             capacity;
 };
 
 enum KCompilerState {
+    KCS_PANIC       = 1 << 0,
     KCS_NEXT_TOKEN  = 1 << 1,
     KCS_GENERATE    = 1 << 2,
     KCS_RELEASE     = 1 << 3
@@ -60,25 +60,28 @@ enum KCompilerSubState {
 //    KCSS_WAIT_ENDL          = 1 << 6
 };
 
-struct KCompiler
-{
-    KModule*    currentModule;
-    KWriter     writer;
+KCompiler* kcNewCompiler();
 
-    SLToken     currentToken;
+void        kcSetCurrentModuleName(KCompiler compiler, char* name);
+char*       kcGetCurrentModuleName(KCompiler* compiler);
 
-    dint        state;
-    dint        subState;
-    dint        localState;
-};
+void        kcSetPreviousToken(KCompiler* compiler, SLToken token);
+SLToken*    kcGetPreviousToken(KCompiler* compiler);
+void        kcSetCurrentToken(KCompiler* compiler, SLToken token);
+SLToken*    kcGetCurrentToken(KCompiler* compiler);
 
-KModule* createModule(char* moduleName);
+void    kcSetState      (KCompiler* compiler, dint state);
+dint    kcGetState      (KCompiler* compiler);
+void    kcSetSubState   (KCompiler* compiler, dint state);
+dint    kcGetSubState   (KCompiler* compiler);
 
-void mNewLabel(KModule* module, KLabel* label);
-KLabel* mGetLabel(KModule* module, char* name);
+int         kcCreateModule  (KCompiler* compiler, char* moduleName);
+KModule*    kcGetModule     (KCompiler* compiler, char* moduleName);
+
+void    mNewLabel(KCompiler* compiler, KLabel* label);
+KLabel* mGetLabel(KCompiler* compiler, char* name);
 
 void mWrite(KModule* module, MEMORY data, duint size);
-void mWriteInstruction(KModule* module, duint64 instruction);
 void mModulePrint(KModule* module);
 
 #endif //KAWA_GEARAPI_H

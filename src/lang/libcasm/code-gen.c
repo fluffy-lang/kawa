@@ -12,45 +12,55 @@
 #include "parser/directive.h"
 #include "parser/keyword.h"
 
-void defineSubState(KCompiler* compiler, car_opcodeStruct* opcodeStruct);
-
 static car_opcodeStruct carOpcodeStruct = {0, NO_REG, 0, 0};
+
+// TODO: Replace later
+#define DVM_BSWAP64( var ) \
+    (var) = ( ( (var) << 8u  ) & 0xFF00FF00FF00FF00ull ) | ( ( (var) >> 8u  ) & 0x00FF00FF00FF00FFull );  \
+    (var) = ( ( (var) << 16u ) & 0xFFFF0000FFFF0000ull ) | ( ( (var) >> 16u ) & 0x0000FFFF0000FFFFull );  \
+    (var) = ( (var) << 32u ) | ( ( (var) >> 32u ) & 0xFFFFFFFFull )
+
 
 duint64 generate(KCompiler* compiler)
 {
     duint64 opcode = car_EmitOp(carOpcodeStruct);
+    DVM_BSWAP64( opcode );
 
     SL_BZERO(&carOpcodeStruct, sizeof(car_opcodeStruct));
     carOpcodeStruct.regDst = NO_REG;
 
-    mWriteInstruction(compiler->currentModule, opcode);
+    KModule* module = kcGetModule(compiler, kcGetCurrentModuleName( compiler ) );
+
+    if ( opcode & 1 )
+        mWrite(module, &opcode, 8);
+    else
+        mWrite(module, &opcode, 4);
 
     return opcode;
 }
 
 void step(KCompiler* compiler, SLLexerContext* ctx)
 {
-//    SLToken token;
+    if (kcGetState(compiler) & KCS_NEXT_TOKEN) {
+        kcSetPreviousToken( compiler, *kcGetCurrentToken(compiler) );
+        kcSetCurrentToken( compiler, sl_getNextToken(ctx) );
 
-    if (compiler->state & KCS_NEXT_TOKEN) {
-        compiler->currentToken = sl_getNextToken(ctx);
-
-        compiler->state &= ~KCS_NEXT_TOKEN;
+        kcSetState( compiler, (kcGetState( compiler ) & ~KCS_NEXT_TOKEN) );
     }
 
-    if (compiler->state & KCS_GENERATE) {
+    if (kcGetState(compiler) & KCS_GENERATE) {
         generate(compiler);
 
-        compiler->state &= ~KCS_GENERATE;
+        kcSetState( compiler, (kcGetState( compiler ) & ~KCS_GENERATE) );
     }
 
-    if (compiler->currentToken.type == T_EOF) {
+    if ( kcGetCurrentToken(compiler)->type == T_EOF ) {
         generate(compiler);
-        compiler->state = KCS_RELEASE;
+        kcSetState( compiler, KCS_RELEASE );
         return;
     }
 
-    switch ( compiler->subState ) {
+    switch ( kcGetSubState(compiler) ) {
         case STAGE0: {
             kStage0(compiler, &carOpcodeStruct);
             break;

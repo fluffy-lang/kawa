@@ -8,6 +8,8 @@
 #include "parser.h"
 #include "code-gen.h"
 
+#include "objectwriter.h"
+
 static SLLexerContext* ctx = NULL;
 
 void load()
@@ -15,16 +17,15 @@ void load()
     ctx = sl_createLexerContext(lexList, lexStageLst);
     sl_openFile(ctx, "I:/casm.asm");
 
-    KCompiler c; // hide struct and make init func
-    c.currentModule = createModule("text");
-    c.state     = KCS_NEXT_TOKEN;
-    c.subState  = STAGE0;
+    KCompiler* c = kcNewCompiler();
 
-    while (c.state != KCS_RELEASE) {
-        step(&c, ctx);
+    while (kcGetState(c) != KCS_RELEASE) {
+        step(c, ctx);
     }
 
-    mModulePrint(c.currentModule);
+    mModulePrint(kcGetModule(c, kcGetCurrentModuleName(c)));
+
+    writeObject(c, "T:\\Object.geff", OBJECT_TYPE_GEFF);
 
     sl_closeFile(ctx);
     sl_freeLexerContext(ctx);
